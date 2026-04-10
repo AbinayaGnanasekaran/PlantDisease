@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block pagetitle %}
+Add Treatment Progress - Plant Disease Detection
+{% endblock pagetitle %}
+{% block body %}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <nav aria-label="breadcrumb" class="mb-4">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('prediction_detail', prediction_id=prediction.id) }}">{{ prediction.disease_name }}</a></li>
+                    <li class="breadcrumb-item active">Add Progress</li>
+                </ol>
+            </nav>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Add Treatment Progress</h5>
+                    <small class="text-muted">Track how your plant is responding to treatment</small>
+                </div>
+                <div class="card-body">
+                    <!-- Current Prediction Summary -->
+                    <div class="alert alert-info mb-4">
+                        <h6>{{ prediction.disease_name }}</h6>
+                        <p class="mb-1">Severity: <span class="badge
+                            {% if prediction.severity_level == 'severe' %}bg-danger
+                            {% elif prediction.severity_level == 'moderate' %}bg-warning text-dark
+                            {% else %}bg-success{% endif %}">{{ prediction.severity_level|title }}</span></p>
+                        <p class="mb-0">Predicted on {{ prediction.timestamp.strftime('%B %d, %Y') }}</p>
+                    </div>
+
+                    <form method="POST" enctype="multipart/form-data">
+                        {{ form.hidden_tag() }}
+
+                        <div class="mb-3">
+                            {{ form.improvement_status.label(class="form-label") }}
+                            {{ form.improvement_status(class="form-select") }}
+                            {% if form.improvement_status.errors %}
+                                {% for error in form.improvement_status.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.notes.label(class="form-label") }}
+                            {{ form.notes(class="form-control", rows=4, placeholder="Describe the current condition of your plant, any changes you've noticed, treatments applied, etc.") }}
+                            {% if form.notes.errors %}
+                                {% for error in form.notes.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.follow_up_image.label(class="form-label") }}
+                            {{ form.follow_up_image(class="form-control") }}
+                            <div class="form-text">Optional: Upload a current photo of your plant to track visual progress</div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">Save Progress</button>
+                            <a href="{{ url_for('prediction_detail', prediction_id=prediction.id) }}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tips for tracking progress -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">💡 Tips for Tracking Progress</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li><strong>Be specific:</strong> Note exact changes in leaf color, size, or new symptoms</li>
+                        <li><strong>Document treatments:</strong> Record what remedies or actions you've taken</li>
+                        <li><strong>Take photos:</strong> Visual documentation helps track improvement over time</li>
+                        <li><strong>Regular updates:</strong> Check and update progress every few days</li>
+                        <li><strong>Be honest:</strong> Accurate assessment helps in adjusting treatment plans</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock body %}

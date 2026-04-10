@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block pagetitle %}
+Saved Remedies - Plant Disease Detection
+{% endblock pagetitle %}
+{% block body %}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>My Saved Remedies</h2>
+                <a href="{{ url_for('market') }}" class="btn btn-primary">Browse More Remedies</a>
+            </div>
+
+            {% if saved_supplements %}
+                <div class="row">
+                    {% for supplement in saved_supplements %}
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            <img src="{{ supplement.supplement_image }}" class="card-img-top" alt="{{ supplement.supplement_name }}" style="height: 200px; object-fit: cover;">
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title">{{ supplement.supplement_name }}</h5>
+                                {% if supplement.disease_name %}
+                                <p class="text-muted small">For: {{ supplement.disease_name }}</p>
+                                {% endif %}
+                                <p class="text-muted small">Saved on {{ supplement.saved_at.strftime('%B %d, %Y') }}</p>
+
+                                <div class="mt-auto">
+                                    <div class="d-flex gap-2">
+                                        <a href="{{ supplement.buy_link }}" target="_blank" class="btn btn-success btn-sm flex-fill">Buy Now</a>
+                                        <form method="POST" action="{{ url_for('remove_bookmark', bookmark_id=supplement.id) }}" class="d-inline">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm"
+                                                    onclick="return confirm('Remove this remedy from saved list?')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-heart fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No saved remedies yet</h5>
+                    <p class="text-muted">Browse the market and save remedies you find useful.</p>
+                    <a href="{{ url_for('market') }}" class="btn btn-primary">Explore Remedies</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock body %}

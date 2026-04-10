@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% block pagetitle %}
+Prediction Details - Plant Disease Detection
+{% endblock pagetitle %}
+{% block body %}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active">{{ prediction.disease_name }}</li>
+                </ol>
+            </nav>
+
+            <!-- Prediction Details -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">{{ prediction.disease_name }}</h4>
+                    <span class="badge
+                        {% if prediction.severity_level == 'severe' %}bg-danger
+                        {% elif prediction.severity_level == 'moderate' %}bg-warning text-dark
+                        {% else %}bg-success{% endif %} fs-6">
+                        {{ prediction.severity_level|title }} Severity
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h6>Description</h6>
+                            <p>{{ prediction.description }}</p>
+
+                            <h6>Prevention Steps</h6>
+                            <p>{{ prediction.prevent }}</p>
+
+                            {% if prediction.confidence_score %}
+                            <p><strong>AI Confidence:</strong> {{ "%.1f"|format(prediction.confidence_score * 100) }}%</p>
+                            {% endif %}
+
+                            <p class="text-muted">Predicted on {{ prediction.timestamp.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                        </div>
+                        <div class="col-md-4">
+                            {% if prediction.image_url %}
+                            <img src="{{ prediction.image_url }}" class="img-fluid rounded" alt="Disease reference image">
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommended Supplement -->
+            {% if prediction.supplement_name %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Recommended Supplement</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            {% if prediction.supplement_image %}
+                            <img src="{{ prediction.supplement_image }}" class="img-fluid rounded" alt="{{ prediction.supplement_name }}">
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <h6>{{ prediction.supplement_name }}</h6>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="d-flex gap-2">
+                                <a href="{{ prediction.supplement_buy_link }}" target="_blank" class="btn btn-success">Buy Now</a>
+                                <form method="POST" action="{{ url_for('bookmark_supplement', supplement_name=prediction.supplement_name) }}" class="d-inline">
+                                    <input type="hidden" name="disease_name" value="{{ prediction.disease_name }}">
+                                    <button type="submit" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-heart"></i> Save
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Treatment Progress -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Treatment Progress</h5>
+                    <a href="{{ url_for('add_treatment_progress', prediction_id=prediction.id) }}" class="btn btn-primary btn-sm">Add Progress Update</a>
+                </div>
+                <div class="card-body">
+                    {% if treatment_progress %}
+                        <div class="timeline">
+                            {% for progress in treatment_progress %}
+                            <div class="timeline-item mb-4">
+                                <div class="timeline-marker
+                                    {% if progress.improvement_status == 'recovered' %}bg-success
+                                    {% elif progress.improvement_status == 'improving' %}bg-info
+                                    {% elif progress.improvement_status == 'same' %}bg-warning
+                                    {% else %}bg-danger{% endif %}">
+                                </div>
+                                <div class="timeline-content">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="mb-0">{{ progress.progress_date.strftime('%B %d, %Y at %I:%M %p') }}</h6>
+                                        <span class="badge
+                                            {% if progress.improvement_status == 'recovered' %}bg-success
+                                            {% elif progress.improvement_status == 'improving' %}bg-info
+                                            {% elif progress.improvement_status == 'same' %}bg-warning text-dark
+                                            {% else %}bg-danger{% endif %}">
+                                            {{ progress.improvement_status|title }}
+                                        </span>
+                                    </div>
+                                    <p class="mb-2">{{ progress.notes }}</p>
+                                    {% if progress.follow_up_image %}
+                                    <img src="{{ url_for('static', filename=progress.follow_up_image.replace('static/', '')) }}"
+                                         class="img-thumbnail" style="max-width: 200px;" alt="Follow-up image">
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-chart-line fa-2x text-muted mb-3"></i>
+                            <h6 class="text-muted">No treatment progress recorded yet</h6>
+                            <p class="text-muted">Start tracking your plant's recovery by adding progress updates.</p>
+                            <a href="{{ url_for('add_treatment_progress', prediction_id=prediction.id) }}" class="btn btn-outline-primary">Add First Update</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e9ecef;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -22px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 2px #e9ecef;
+}
+
+.timeline-content {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 3px solid #007bff;
+}
+</style>
+
+{% endblock body %}

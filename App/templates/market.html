@@ -41,9 +41,19 @@ Supplement Market
                             <br>
                             <h6>For {{disease[index]}}</h6>
                             <p>{{supplement_name[index]}}</p>
-                            <a target="_blank" href={{buy[index]}}>
-                                <button type="button" class="btn btn-light" style="background-image: linear-gradient(300deg, #ff5c4d, #ff4d4d); color: white; font-weight: 600;">Buy Product</button>
-                            </a>
+                            <div class="d-flex gap-2 justify-content-center">
+                                <a target="_blank" href={{buy[index]}}>
+                                    <button type="button" class="btn btn-light" style="background-image: linear-gradient(300deg, #ff5c4d, #ff4d4d); color: white; font-weight: 600;">Buy Product</button>
+                                </a>
+                                {% if current_user.is_authenticated %}
+                                <form method="POST" action="{{ url_for('bookmark_supplement', supplement_name=supplement_name[index]) }}" class="d-inline">
+                                    <input type="hidden" name="disease_name" value="{{ disease[index] }}">
+                                    <button type="submit" class="btn btn-outline-primary btn-sm" title="Save to My Remedies">
+                                        <i class="fas fa-heart"></i> Save
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
                         </center>
                     </div>
                 </div>
