@@ -1,48 +1,74 @@
 import os
 from flask import Flask, redirect, render_template, request, jsonify
 from PIL import Image
-import torchvision.transforms.functional as TF
-import numpy as np
 import torch
-import pandas as pd
 import torch.nn as nn
 from torchvision import transforms
-disease_info = pd.read_csv('disease_info.csv' , encoding='cp1252')
-supplement_info = pd.read_csv('supplement_info.csv',encoding='cp1252')
+import pandas as pd
+
+# -----------------------------
+# Load CSV Files
+# -----------------------------
+disease_info = pd.read_csv('disease_info.csv', encoding='cp1252')
+supplement_info = pd.read_csv('supplement_info.csv', encoding='cp1252')
+
+# -----------------------------
+# Temporary Model Definition
+# -----------------------------
 class TempModel(nn.Module):
-    def __init__(self):
+    def __init__(self, num_classes=39):
         super(TempModel, self).__init__()
         self.conv1 = nn.Conv2d(3, 5, (3, 3))
+        self.fc = nn.Linear(5 * 222 * 222, num_classes)
 
-    def forward(self, inp):
-        return self.conv1(inp)
+    def forward(self, x):
+        x = self.conv1(x)
+        x = x.view(x.size(0), -1)
+        x = self.fc(x)
+        return x
 
-model = TempModel()
-model.load_state_dict(torch.load("ResNet50.pt"))
+# -----------------------------
+# Load the Model
+# -----------------------------
+model_path = "ResNet50.pt"
+
+if not os.path.exists(model_path):
+    print("ERROR: Model file missing:", model_path)
+
+model = TempModel(num_classes=len(disease_info))
+
+try:
+    model.load_state_dict(torch.load(model_path, map_location='cpu'), strict=False)
+    print("Model loaded successfully.")
+except Exception as e:
+    print("Model load error:", e)
+
 model.eval()
 
+# -----------------------------
+# Image Transform
+# -----------------------------
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
 ])
 
-def predict():
-    try:
-        # Get the uploaded image
-        image = request.files['image']
-        img = Image.open(image)
-        img = transform(img)
+# -----------------------------
+# Prediction Function
+# -----------------------------
+def predict(image_path):
+    img = Image.open(image_path).convert("RGB")
+    img = transform(img).unsqueeze(0)
 
-        # Make a prediction
-        with torch.no_grad():
-            output = model(img.unsqueeze(0))
-            predicted_class = torch.argmax(output)
+    with torch.no_grad():
+        output = model(img)
+        pred = torch.argmax(output, dim=1).item()
 
-        return jsonify({'prediction': predicted_class.item()})
+    return pred
 
-    except Exception as e:
-        return jsonify({'error': str(e)})
-
+# -----------------------------
+# Flask App
+# -----------------------------
 app = Flask(__name__)
 
 @app.route('/')
@@ -56,7 +82,6 @@ def contact():
 @app.route('/index')
 def ai_engine_page():
     return render_template('index.html')
-    #comment
 
 @app.route('/mobile-device')
 def mobile_device_detected_page():
@@ -65,26 +90,48 @@ def mobile_device_detected_page():
 @app.route('/submit', methods=['GET', 'POST'])
 def submit():
     if request.method == 'POST':
-        image = request.files['image']
-        filename = image.filename
-        file_path = os.path.join('static/uploads', filename)
-        image.save(file_path)
-        print(file_path)
-        pred = predict(file_path)  # Call the predict function here
-        title = disease_info['disease_name'][pred]
-        description = disease_info['description'][pred]
-        prevent = disease_info['Possible Steps'][pred]
-        image_url = disease_info['image_url'][pred]
-        supplement_name = supplement_info['supplement name'][pred]
-        supplement_image_url = supplement_info['supplement image'][pred]
-        supplement_buy_link = supplement_info['buy link'][pred]
-        return render_template('submit.html', title=title, desc=description, prevent=prevent,
-                               image_url=image_url, pred=pred, sname=supplement_name, simage=supplement_image_url, buy_link=supplement_buy_link)
 
-@app.route('/market', methods=['GET', 'POST'])
+        upload_path = "static/uploads"
+        os.makedirs(upload_path, exist_ok=True)
+
+        image = request.files['image']
+        file_path = os.path.join(upload_path, image.filename)
+        image.save(file_path)
+
+        pred = predict(file_path)
+
+        title = disease_info.loc[pred, 'disease_name']
+        description = disease_info.loc[pred, 'description']
+        prevent = disease_info.loc[pred, 'Possible Steps']
+        image_url = disease_info.loc[pred, 'image_url']
+
+        supplement_name = supplement_info.loc[pred, 'supplement name']
+        supplement_image = supplement_info.loc[pred, 'supplement image']
+        supplement_buy_link = supplement_info.loc[pred, 'buy link']
+
+        return render_template(
+            'submit.html',
+            title=title,
+            desc=description,
+            prevent=prevent,
+            image_url=image_url,
+            pred=pred,
+            sname=supplement_name,
+            simage=supplement_image,
+            buy_link=supplement_buy_link
+        )
+
+    return redirect('/')
+
+@app.route('/market')
 def market():
-    return render_template('market.html', supplement_image=list(supplement_info['supplement image']),
-                           supplement_name=list(supplement_info['supplement name']), disease=list(disease_info['disease_name']), buy=list(supplement_info['buy link']))
+    return render_template(
+        'market.html',
+        supplement_image=list(supplement_info['supplement image']),
+        supplement_name=list(supplement_info['supplement name']),
+        disease=list(disease_info['disease_name']),
+        buy=list(supplement_info['buy link'])
+    )
 
 if __name__ == '__main__':
     app.run(debug=True)
