@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block pagetitle %}
+Expert Q&A
+{% endblock pagetitle %}
+{% block body %}
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h2>Expert Q&amp;A</h2>
+        <p class="text-muted">Connect to agricultural specialists for trusted advice.</p>
+    </div>
+
+    <div class="row gy-4">
+        {% for expert in experts %}
+        <div class="col-md-4">
+            <div class="p-4 bg-white rounded shadow-sm" style="border:1px solid #e5e7eb;">
+                <h5>{{ expert.name }}</h5>
+                <p class="mb-2"><strong>Specialty:</strong> {{ expert.specialty }}</p>
+                <p class="mb-3"><strong>Email:</strong> <a href="mailto:{{ expert.email }}">{{ expert.email }}</a></p>
+                <p class="text-muted">Ask questions about disease management, crop protection, and sustainable farming.</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock body %}

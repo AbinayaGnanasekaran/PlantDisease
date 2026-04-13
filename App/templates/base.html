@@ -57,19 +57,89 @@
         }
 
         label {
-        
-            background-color: rgb(2, 46, 15);
-            color: white;
-            padding: 0.5rem;
-            font-family: sans-serif;
-            border-radius: 0.3rem;
+            display: inline-block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #1f2937;
+            background-color: transparent;
+            padding: 0;
+            border-radius: 0;
+            cursor: default;
+        }
+
+        .form-check-label {
             cursor: pointer;
-            margin-top: 1rem;
+            background-color: transparent;
+            padding: 0;
+            margin-left: 0.35rem;
+        }
+
+        input.form-control,
+        .form-control:focus,
+        .form-check-input {
+            border: 1px solid #d1d5db;
+            box-shadow: none;
+        }
+
+        .custom-form-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 1.25rem;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+        }
+
+        .navbar {
+            border-bottom: 1px solid #e5e7eb;
+            box-shadow: 0 3px 16px rgba(15, 23, 42, 0.06);
+        }
+
+        .navbar-nav .nav-link {
+            color: #1f2937 !important;
+            padding: 0.75rem 1rem;
+            border: 1px solid transparent;
+            border-radius: 0.75rem;
+            transition: all 0.2s ease;
+            margin: 0 0.15rem;
+        }
+
+        .navbar-nav .nav-link:hover,
+        .navbar-nav .nav-link:focus {
+            background-color: rgba(14, 165, 233, 0.08);
+            border-color: rgba(14, 165, 233, 0.16);
+            color: #0f172a !important;
+        }
+
+        .navbar-nav .nav-link.active {
+            background-color: rgba(16, 185, 129, 0.16);
+            border-color: rgba(16, 185, 129, 0.24);
+            color: #064e3b !important;
+        }
+
+        .upload-label {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 140px;
+            height: 46px;
+            border-radius: 0.8rem;
+            border: 1px solid #22c55e;
+            background-color: #ffffff;
+            color: #0f5132;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            padding: 0 1rem;
+        }
+
+        .upload-label:hover {
+            background-color: #ecfdf5;
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(34, 197, 94, 0.14);
         }
 
         #file-chosen {
-            margin-left: 0.3rem;
+            margin-left: 0.8rem;
             font-family: sans-serif;
+            color: #111827;
         }
 
         .footer-basic {
@@ -84,31 +154,37 @@
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light py-3">
         <div class="container">
-            <a class="navbar-brand" href="#" style="font-size: 20px;font-weight: 600;color:  #ff914d;margin-top: 10px;"><img src="static\uploads\logo2.jpg" style="width: 30px; margin-right: 10px;" srcset="">PlantCure</a>
+            <a class="navbar-brand d-flex align-items-center" href="#" style="font-size: 20px;font-weight: 600;color:  #ff914d;">
+                <img src="static\uploads\logo0.jpg" style="width: 30px; margin-right: 10px;" alt="PlantCure logo">
+                PlantCure
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav mx-auto">
-                    <li class="nav-item active">
-                        <a class="nav-link" href="/">Home</a>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="/">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="./market">Supplements</a>
+                        <a class="nav-link {% if request.path.startswith('/market') %}active{% endif %}" href="./market">Supplements</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="./index">AiEngine</a>
+                        <a class="nav-link {% if request.path.startswith('/index') %}active{% endif %}" href="./index">AiEngine</a>
                     </li>
                 </ul>
-                <ul class="navbar-nav ml-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="./contact">Contact Us</a>
-                    </li>
+                <ul class="navbar-nav ms-auto">
+                    <!-- <li class="nav-item">
+                        <a class="nav-link {% if request.path.startswith('/contact') %}active{% endif %}" href="./contact">Contact Us</a>
+                    </li> -->
                     {% if current_user.is_authenticated %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
+                            <a class="nav-link {% if request.path.startswith('/dashboard') %}active{% endif %}" href="{{ url_for('dashboard') }}">Dashboard</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('saved_remedies') }}">My Remedies</a>
+                            <a class="nav-link {% if request.path.startswith('/saved-remedies') %}active{% endif %}" href="{{ url_for('saved_remedies') }}">My Remedies</a>
                         </li>
                         <li class="nav-item">
                             <span class="nav-link">Welcome, {{ current_user.username }}!</span>
@@ -134,8 +210,7 @@
     <div class="footer-basic">
       
     </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-qQ2dYHCDnqwGZ8DSN3a+psvX7FQ2F5QfKVA5AimJpTtq3uj5Ef9fe2xqgzFh5lR9" crossorigin="anonymous"></script>
 </body>
 
 </html>

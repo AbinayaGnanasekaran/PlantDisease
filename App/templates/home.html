@@ -31,6 +31,50 @@ Plant Disease Detection
 </center>
 
 <div class="container mt-5">
+    <div class="text-center mb-5">
+        <h4 style="font-weight:700; color:#064e3b;">Built for farmers, experts, and communities</h4>
+        <p style="color:#334155; max-width:720px; margin:auto;">Explore regional alerts, community forums, expert guidance, user-submitted remedies, and agriculture subsidy information all in one place.</p>
+    </div>
+    <div class="row g-4 mb-5">
+        <div class="col-md-6 col-lg-4">
+            <div class="p-4 bg-white rounded shadow-sm" style="border:1px solid #e5e7eb;">
+                <h5>Regional Disease Alerts</h5>
+                <p>Get location-specific warnings for crop diseases so you can act before problems spread.</p>
+                <a href="{{ url_for('alerts') }}" class="btn btn-outline-success btn-sm">View Alerts</a>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="p-4 bg-white rounded shadow-sm" style="border:1px solid #e5e7eb;">
+                <h5>Discussion Forums</h5>
+                <p>Ask questions, share experiences, and learn from other farmers in the community.</p>
+                <a href="{{ url_for('forum') }}" class="btn btn-outline-success btn-sm">Go to Forum</a>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="p-4 bg-white rounded shadow-sm" style="border:1px solid #e5e7eb;">
+                <h5>Expert Q&A</h5>
+                <p>Connect with agricultural experts for trusted advice on disease treatment and care.</p>
+                <a href="{{ url_for('experts') }}" class="btn btn-outline-success btn-sm">Ask Experts</a>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="p-4 bg-white rounded shadow-sm" style="border:1px solid #e5e7eb;">
+                <h5>User Remedies</h5>
+                <p>Submit your own remedies and learn from community-contributed treatments.</p>
+                <a href="{{ url_for('submit_remedy') }}" class="btn btn-outline-success btn-sm">Submit Remedy</a>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="p-4 bg-white rounded shadow-sm" style="border:1px solid #e5e7eb;">
+                <h5>Government Schemes</h5>
+                <p>Find the latest agricultural subsidies, support programs, and scheme details.</p>
+                <a href="{{ url_for('schemes') }}" class="btn btn-outline-success btn-sm">View Schemes</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mt-3">
   <div class="row ">
       <div class="col-3">
           <div class="rounded p-3  shadow border text-center" style="width: 85%"><img src="../static/uploads/2.png" style="width: 100%;"  alt="" srcset=""></div>

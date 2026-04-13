@@ -32,15 +32,15 @@ AI Engine
             <div class="col mx-auto col-sm-12 col-md-6 col-lg-6">
                 <div class="p-5 bg-white shadow rounded-lg" style="height: 100%;">
                     <h6 class="text-center mb-4 text-muted">
-                        Simply upload your plant's leaf image and then see the magic of AI.
+                        Simply upload your plant's leaf image to identify the disease.
                     </h6>
                     <!-- Default bootstrap file upload-->
 
                     <form action="/submit" method="POST" enctype="multipart/form-data">
                         <div class="custom-file overflow-hidden mb-4" style="padding-bottom: 20%;">
                             <input type="file" id="actual-btn" hidden name="image" />
-                            <label for="actual-btn"  style="background-image: linear-gradient(300deg, #ff5c4d, #ff4d4d); color: white">Choose File</label>
-                            <span id="file-chosen" style="color:black">No file chosen</span>
+                            <label for="actual-btn" class="upload-label">Choose File</label>
+                            <span id="file-chosen">No file chosen</span>
                         </div>
 
                         <!-- End -->

@@ -8,6 +8,7 @@ from wtforms.widgets import TextArea
 from wtforms.validators import DataRequired, Email, EqualTo, Length
 from werkzeug.security import generate_password_hash, check_password_hash
 from PIL import Image
+from CNN import CNN
 # Try to import torch-related modules
 try:
     import torch
@@ -74,13 +75,19 @@ class TempModel(nn.Module):
 # -----------------------------
 # Load the Model
 # -----------------------------
-model_path = "ResNet50.pt"
+model_path = "trained_model.pth"
 
 if TORCH_AVAILABLE:
-    model = TempModel(num_classes=len(disease_info))
-
+    model = CNN(K=len(disease_info))
     try:
-        model.load_state_dict(torch.load(model_path, map_location='cpu'), strict=False)
+        checkpoint = torch.load(model_path, map_location='cpu')
+        if isinstance(checkpoint, dict):
+            if 'state_dict' in checkpoint:
+                model.load_state_dict(checkpoint['state_dict'], strict=False)
+            else:
+                model.load_state_dict(checkpoint, strict=False)
+        else:
+            model = checkpoint
         print("Model loaded successfully.")
     except Exception as e:
         print("Model load error:", e)
@@ -226,6 +233,34 @@ class TreatmentProgress(db.Model):
     improvement_status = db.Column(db.String(50), nullable=False)  # worse, same, improving, recovered
     follow_up_image = db.Column(db.String(500))  # Optional follow-up image path
 
+class RemedySuggestion(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    submitted_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+
+    user = db.relationship('User', backref='remedy_suggestions')
+
+class ForumTopic(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    body = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+
+    user = db.relationship('User', backref='forum_topics')
+    replies = db.relationship('ForumReply', backref='topic', lazy=True, cascade='all, delete-orphan')
+
+class ForumReply(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    topic_id = db.Column(db.Integer, db.ForeignKey('forum_topic.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    body = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+
+    user = db.relationship('User', backref='forum_replies')
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -256,6 +291,20 @@ class TreatmentProgressForm(FlaskForm):
     ], validators=[DataRequired()])
     follow_up_image = FileField('Follow-up Image (Optional)')
     submit = SubmitField('Add Progress Update')
+
+class RemedySuggestionForm(FlaskForm):
+    title = StringField('Remedy Title', validators=[DataRequired(), Length(min=5, max=200)])
+    description = StringField('Remedy Description', validators=[DataRequired(), Length(min=10)], widget=TextArea())
+    submit = SubmitField('Submit Remedy')
+
+class ForumTopicForm(FlaskForm):
+    title = StringField('Question Title', validators=[DataRequired(), Length(min=10, max=200)])
+    body = StringField('Question Details', validators=[DataRequired(), Length(min=20)], widget=TextArea())
+    submit = SubmitField('Post Question')
+
+class ForumReplyForm(FlaskForm):
+    body = StringField('Your Reply', validators=[DataRequired(), Length(min=5)], widget=TextArea())
+    submit = SubmitField('Post Reply')
 
 # -----------------------------
 # Authentication Routes
@@ -308,6 +357,108 @@ def home_page():
 @app.route('/contact')
 def contact():
     return render_template('contact-us.html')
+
+@app.route('/alerts')
+def alerts():
+    regional_alerts = [
+        {
+            'region': 'North-Western Plains',
+            'crop': 'Tomato',
+            'disease': 'Early Blight',
+            'advice': 'Inspect leaves daily and apply protective fungicide as needed.'
+        },
+        {
+            'region': 'Central Valley',
+            'crop': 'Potato',
+            'disease': 'Late Blight',
+            'advice': 'Avoid overhead irrigation and remove infected plants immediately.'
+        },
+        {
+            'region': 'Eastern Highlands',
+            'crop': 'Chili',
+            'disease': 'Bacterial Spot',
+            'advice': 'Ensure good airflow and use copper-based sprays when symptoms appear.'
+        }
+    ]
+    return render_template('alerts.html', alerts=regional_alerts)
+
+@app.route('/forum')
+def forum():
+    topics = ForumTopic.query.order_by(ForumTopic.created_at.desc()).all()
+    return render_template('forum.html', topics=topics)
+
+@app.route('/forum/new', methods=['GET', 'POST'])
+@login_required
+def new_forum_topic():
+    form = ForumTopicForm()
+    if form.validate_on_submit():
+        topic = ForumTopic(
+            user_id=current_user.id,
+            title=form.title.data,
+            body=form.body.data
+        )
+        db.session.add(topic)
+        db.session.commit()
+        flash('Your question has been posted to the forum.', 'success')
+        return redirect(url_for('forum'))
+    return render_template('new_forum_topic.html', form=form)
+
+@app.route('/forum/topic/<int:topic_id>', methods=['GET', 'POST'])
+def forum_topic(topic_id):
+    topic = ForumTopic.query.get_or_404(topic_id)
+    form = ForumReplyForm()
+    if form.validate_on_submit():
+        if not current_user.is_authenticated:
+            flash('Please sign in to post a reply.', 'danger')
+            return redirect(url_for('login'))
+        reply = ForumReply(
+            topic_id=topic_id,
+            user_id=current_user.id,
+            body=form.body.data
+        )
+        db.session.add(reply)
+        db.session.commit()
+        flash('Your reply has been posted.', 'success')
+        return redirect(url_for('forum_topic', topic_id=topic_id))
+    replies = ForumReply.query.filter_by(topic_id=topic_id).order_by(ForumReply.created_at.asc()).all()
+    return render_template('forum_topic.html', topic=topic, replies=replies, form=form)
+
+@app.route('/experts')
+def experts():
+    expert_list = [
+        {'name': 'Dr. Kavita Sharma', 'specialty': 'Plant Pathology', 'email': 'ksharma@plantcure.org'},
+        {'name': 'Mr. Arjun Patel', 'specialty': 'Sustainable Farming', 'email': 'arjun.patel@plantcure.org'},
+        {'name': 'Ms. Nisha Rao', 'specialty': 'Crop Protection', 'email': 'nisha.rao@plantcure.org'}
+    ]
+    return render_template('experts.html', experts=expert_list)
+
+@app.route('/schemes')
+def schemes():
+    schemes_info = [
+        {'name': 'National Agriculture Insurance Scheme', 'description': 'Insurance support for crop losses and damage caused by pests and disease.'},
+        {'name': 'Subsidized Inputs Program', 'description': 'Financial support for approved fertilizers, seeds, and crop protection products.'},
+        {'name': 'Farmer Training Grant', 'description': 'Skill-building and advisory programs for modern disease management techniques.'}
+    ]
+    return render_template('schemes.html', schemes=schemes_info)
+
+@app.route('/submit-remedy', methods=['GET', 'POST'])
+@login_required
+def submit_remedy():
+    form = RemedySuggestionForm()
+    suggestions = RemedySuggestion.query.order_by(RemedySuggestion.submitted_at.desc()).all()
+
+    if form.validate_on_submit():
+        suggestion = RemedySuggestion(
+            user_id=current_user.id,
+            title=form.title.data,
+            description=form.description.data
+        )
+        db.session.add(suggestion)
+        db.session.commit()
+        flash('Thank you! Your remedy has been shared with the community.', 'success')
+        return redirect(url_for('submit_remedy'))
+
+    return render_template('submit_remedy.html', form=form, suggestions=suggestions)
 
 @app.route('/index')
 @login_required

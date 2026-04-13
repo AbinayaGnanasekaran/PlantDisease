@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block pagetitle %}
+Submit Remedy
+{% endblock pagetitle %}
+{% block body %}
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h2>Submit Your Remedy</h2>
+        <p class="text-muted">Share a treatment or prevention method that worked for your crops.</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row">
+        <div class="col-lg-5 mb-4">
+            <div class="p-4 bg-white rounded shadow-sm" style="border:1px solid #e5e7eb;">
+                <h5>Share a community remedy</h5>
+                <form method="POST" action="">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.title.label(class="form-label") }}
+                        {{ form.title(class="form-control") }}
+                        {% for error in form.title.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.description.label(class="form-label") }}
+                        {{ form.description(class="form-control", rows=5) }}
+                        {% for error in form.description.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="d-grid">
+                        {{ form.submit(class="btn btn-success btn-lg") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="row gy-4">
+                {% for suggestion in suggestions %}
+                <div class="col-12">
+                    <div class="p-4 bg-white rounded shadow-sm" style="border:1px solid #e5e7eb;">
+                        <h5>{{ suggestion.title }}</h5>
+                        <p class="mb-2 text-muted">Submitted by {{ suggestion.user.username }} on {{ suggestion.submitted_at.strftime('%d %b %Y') }}</p>
+                        <p>{{ suggestion.description }}</p>
+                    </div>
+                </div>
+                {% else %}
+                <div class="col-12">
+                    <div class="p-4 bg-white rounded shadow-sm" style="border:1px solid #e5e7eb;">
+                        <p class="mb-0">No remedies have been shared yet. Be the first to contribute!</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock body %}

@@ -34,10 +34,6 @@ Prediction Details - Plant Disease Detection
                             <h6>Prevention Steps</h6>
                             <p>{{ prediction.prevent }}</p>
 
-                            {% if prediction.confidence_score %}
-                            <p><strong>AI Confidence:</strong> {{ "%.1f"|format(prediction.confidence_score * 100) }}%</p>
-                            {% endif %}
-
                             <p class="text-muted">Predicted on {{ prediction.timestamp.strftime('%B %d, %Y at %I:%M %p') }}</p>
                         </div>
                         <div class="col-md-4">

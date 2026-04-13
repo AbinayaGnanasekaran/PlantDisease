@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block pagetitle %}
+{{ topic.title }}
+{% endblock pagetitle %}
+{% block body %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="p-4 bg-white rounded shadow-sm mb-4" style="border:1px solid #e5e7eb;">
+                <h2>{{ topic.title }}</h2>
+                <p class="text-muted mb-0">Posted by {{ topic.user.username }} on {{ topic.created_at.strftime('%d %b %Y') }}</p>
+                <hr>
+                <p>{{ topic.body }}</p>
+            </div>
+
+            <div class="mb-4">
+                <h4>{{ replies|length }} Replies</h4>
+                {% for reply in replies %}
+                <div class="p-3 bg-white rounded shadow-sm mb-3" style="border:1px solid #e5e7eb;">
+                    <p class="mb-1">{{ reply.body }}</p>
+                    <p class="text-muted mb-0">Replied by {{ reply.user.username }} on {{ reply.created_at.strftime('%d %b %Y') }}</p>
+                </div>
+                {% else %}
+                <div class="p-4 bg-white rounded shadow-sm" style="border:1px solid #e5e7eb;">
+                    <p class="mb-0">No replies yet. Be the first to answer this question.</p>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="p-4 bg-white rounded shadow-sm" style="border:1px solid #e5e7eb;">
+                <h5>Add a Reply</h5>
+                {% if current_user.is_authenticated %}
+                    <form method="POST" action="">
+                        {{ form.hidden_tag() }}
+                        <div class="mb-3">
+                            {{ form.body.label(class="form-label") }}
+                            {{ form.body(class="form-control", rows=4) }}
+                            {% for error in form.body.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="d-grid">
+                            {{ form.submit(class="btn btn-success btn-lg") }}
+                        </div>
+                    </form>
+                {% else %}
+                    <p>Please <a href="{{ url_for('login') }}">sign in</a> to reply.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock body %}
